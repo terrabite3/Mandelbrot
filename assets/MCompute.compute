@@ -1,0 +1,84 @@
+﻿// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel FloatMain
+#pragma kernel DoubleMain
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+RWTexture2D<float> Result;
+float4 bounds;  // bounds = [top, left, bottom, right]
+uint2 leftInts, rightInts, topInts, bottomInts;
+int textureSize;
+int maxIt;
+
+[numthreads(16,16,1)]
+void FloatMain (uint3 id : SV_DispatchThreadID)
+{
+    float x0 = bounds[1] + (1.0 * id.x / textureSize) * (bounds[3] - bounds[1]);
+    float y0 = bounds[0] + (1.0 * id.y / textureSize) * (bounds[2] - bounds[0]);
+
+    float x = 0.0;
+    float y = 0.0;
+
+    float xSqr, ySqr, xTemp;
+
+    int iteration = 0;
+
+    while(true) {
+        
+		xSqr = x * x;
+		ySqr = y * y;
+		if (xSqr + ySqr > 4.0) break;
+		if (iteration >= maxIt) break;
+		
+		xTemp = xSqr - ySqr + x0;
+		y = 2.0 * x * y + y0;
+		x = xTemp;
+
+		iteration++;
+    }
+   	if (iteration == maxIt) {
+        Result[id.xy] = -1.0;
+	} else {
+        Result[id.xy] = float(iteration) - log2(log2(sqrt(xSqr + ySqr)));
+	}
+
+}
+
+[numthreads(4,4,1)]
+void DoubleMain (uint3 id : SV_DispatchThreadID)
+{
+    double left = asdouble(leftInts.x, leftInts.y);
+    double right = asdouble(rightInts.x, rightInts.y);
+    double top = asdouble(topInts.x, topInts.y);
+    double bottom = asdouble(bottomInts.x, bottomInts.y);
+    
+    double x0 = left + (1.0 * id.x / textureSize) * (right - left);
+    double y0 = top + (1.0 * id.y / textureSize) * (bottom - top);
+
+    double x = 0.0;
+    double y = 0.0;
+
+    double xSqr, ySqr, xTemp;
+
+    int iteration = 0;
+
+    while(true) {
+        
+		xSqr = x * x;
+		ySqr = y * y;
+		if (xSqr + ySqr > 4.0) break;
+		if (iteration >= maxIt) break;
+		
+		xTemp = xSqr - ySqr + x0;
+		y = 2.0 * x * y + y0;
+		x = xTemp;
+
+		iteration++;
+    }
+   	if (iteration == maxIt) {
+        Result[id.xy] = -1.0;
+	} else {
+        Result[id.xy] = float(iteration) - log2(log2(sqrt(xSqr + ySqr)));
+	}
+
+}
