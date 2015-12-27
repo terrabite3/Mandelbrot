@@ -5,12 +5,20 @@ public class GlobalScript : MonoBehaviour {
 
     public bool DebugMode = false;
 
-	// Use this for initialization
+    public static float PixelThreshold
+    {
+        get
+        {
+            int height = Screen.height;
+
+            return height / 500;
+        }
+    }
+    
 	void Start () {
 	
 	}
 	
-	// Update is called once per frame
 	void Update () {
         if (Input.GetButtonDown("Debug"))
             DebugMode = !DebugMode;

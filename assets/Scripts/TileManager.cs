@@ -9,7 +9,6 @@ public class TileManager : MonoBehaviour {
     public GameObject tilePrefab;
     public int floatKernel, doubleKernel;
     public int textureSize = 512;
-    public float zoomFudge = 1.5f;
 
     private List<Tile> tiles = new List<Tile>();
     
@@ -31,7 +30,7 @@ public class TileManager : MonoBehaviour {
         {
 
             // Check if we should divide the tile
-            if (camZoom * zoomFudge > t.Zoom &&
+            if (camZoom * GlobalScript.PixelThreshold > t.Zoom &&
                 t.level < 29 &&     // Magic number: double seems to bottom out around 29
                 t.IsInView() &&
                 t.splittable)
