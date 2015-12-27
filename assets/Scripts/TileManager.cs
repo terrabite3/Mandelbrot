@@ -24,7 +24,7 @@ public class TileManager : MonoBehaviour {
         floatKernel = shader.FindKernel("FloatMain");
         doubleKernel = shader.FindKernel("DoubleMain");
 
-        tiles.Add(new Tile(-1, 0.0f, 0.0f));
+        tiles.Add(new Tile(-1, "", 0.0f, 0.0f));
     }
 	
 	void Update () {
@@ -102,14 +102,38 @@ public class TileManager : MonoBehaviour {
     public class Tile
     {
         public int level;
+        public string address;
         public double centerX;
         public double centerY;
         private GameObject plane;
         public int iterations;
 
-        public Tile(int v1, double v2, double v3)
+        public string HexAddress { get
+            {
+                string result = "0x";
+                for (int i = 0; i < address.Length; i++)
+                {
+                    if (i % 2 == 0)
+                    {
+                        result += address[i];
+                    }
+                    else
+                    {
+                        int number = Int32.Parse("" + address[i - 1]) * 4;
+                        number += Int32.Parse("" + address[i]);
+                        result = result.Substring(0, result.Length - 1);
+                        result += number.ToString("X");
+                    }
+                }
+
+                return result;
+            }
+        }
+
+        public Tile(int v1, string addr, double v2, double v3)
         {
             level = v1;
+            address = addr;
             centerX = v2;
             centerY = v3;
 
@@ -152,8 +176,8 @@ public class TileManager : MonoBehaviour {
             if (text != null)
             {
 
-                text.text = level.ToString();
-
+                text.text = address;
+                //text.fontSize /= level;
 
             }
         }
@@ -183,7 +207,10 @@ public class TileManager : MonoBehaviour {
 
 
                 //    text.fontSize = (int)(96 * scale);
-                text.text = level.ToString();
+                //text.text = address;
+                text.text = HexAddress;
+                if (level > 0)
+                    text.fontSize = (int)(400 / Math.Pow(HexAddress.Length, 0.7));
             //    //text.transform.position = Vector3.Scale(plane.transform.position, new Vector3(scale, scale, scale));
 
         }
@@ -232,7 +259,10 @@ public class TileManager : MonoBehaviour {
                 default:
                     throw new Exception("Y should be 0 or 1");
             }
-            return new Tile(level + 1, cx, cy);
+
+            int addressNext = x + 2 * y;
+
+            return new Tile(level + 1, address + addressNext, cx, cy);
         }
 
         public void RenderDeeper()
