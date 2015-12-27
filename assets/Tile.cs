@@ -72,14 +72,7 @@ public class Tile : MonoBehaviour
             (float)((centerY - camY) * camZoom),
             level / 10.0f);
         gameObject.transform.localScale = new Vector3(scale, scale, level / 10.0f);
-
-        TextMesh text = gameObject.GetComponentInChildren<TextMesh>();
-        if (text != null)
-        {
-            text.text = HexAddress;
-            text.fontSize = (int)(10000 / Math.Pow(HexAddress.Length, 1));
-
-        }
+        
     }
 
     private static int[] DoubleAsInts(double value)
@@ -145,12 +138,6 @@ public class Tile : MonoBehaviour
 
     internal void Destroy()
     {
-        if (gameObject != null)
-        {
-            var text = gameObject.GetComponentInChildren<TextMesh>();
-            if (text != null)
-                text.color = new Color(0, 0, 0, 0);
-        }
         GameObject.Destroy(gameObject, 0);
     }
 
