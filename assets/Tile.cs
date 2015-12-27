@@ -5,83 +5,81 @@ using System;
 public class Tile : MonoBehaviour
 {
 
-    // Use this for initialization
-    void Start()
-    {
-
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        //UpdatePosition();
-    }
-    /*
     public int level;
+    public string address;
     public double centerX;
     public double centerY;
-    private GameObject plane;
     public int iterations;
+    public TileManager Manager;
 
-    public Tile(int v1, double v2, double v3)
+    public void Init(TileManager man, int v1, string addr, double v2, double v3)
     {
+        Manager = man;
         level = v1;
+        address = addr;
         centerX = v2;
         centerY = v3;
+        splittable = true;
+
+        gameObject.name = "Tile " + HexAddress;
 
         iterations = (int)CutoffManager.cutoff + 100;
 
-        RenderTexture texture = new RenderTexture(TileManager.inst.textureSize, TileManager.inst.textureSize, 32, RenderTextureFormat.RFloat);
+        RenderTexture texture = new RenderTexture(Manager.textureSize, Manager.textureSize, 32, RenderTextureFormat.RFloat);
         texture.enableRandomWrite = true;
         texture.Create();
 
-        TileManager.inst.shader.SetInt("textureSize", TileManager.inst.textureSize);
-        TileManager.inst.shader.SetInt("maxIt", iterations);
+        Manager.shader.SetInt("textureSize", Manager.textureSize);
+        Manager.shader.SetInt("maxIt", iterations);
 
         if (level < 17) // Magic number: around zoom 2^17, the float is not enough precision
         {
-            TileManager.inst.shader.SetTexture(TileManager.inst.floatKernel, "Result", texture);
-            TileManager.inst.shader.SetFloats("bounds", new float[] { (float)Top, (float)Left, (float)Bottom, (float)Right });
+            Manager.shader.SetTexture(Manager.floatKernel, "Result", texture);
+            Manager.shader.SetFloats("bounds", new float[] { (float)Top, (float)Left, (float)Bottom, (float)Right });
 
-            TileManager.inst.shader.Dispatch(TileManager.inst.floatKernel, TileManager.inst.textureSize / 16, TileManager.inst.textureSize / 16, 1);
+            Manager.shader.Dispatch(Manager.floatKernel, Manager.textureSize / 16, Manager.textureSize / 16, 1);
         }
         else
         {
-            TileManager.inst.shader.SetTexture(TileManager.inst.doubleKernel, "Result", texture);
+            Manager.shader.SetTexture(Manager.doubleKernel, "Result", texture);
 
-            TileManager.inst.shader.SetInts("leftInts", DoubleAsInts(Left));
-            TileManager.inst.shader.SetInts("rightInts", DoubleAsInts(Right));
-            TileManager.inst.shader.SetInts("topInts", DoubleAsInts(Top));
-            TileManager.inst.shader.SetInts("bottomInts", DoubleAsInts(Bottom));
+            Manager.shader.SetInts("leftInts", DoubleAsInts(Left));
+            Manager.shader.SetInts("rightInts", DoubleAsInts(Right));
+            Manager.shader.SetInts("topInts", DoubleAsInts(Top));
+            Manager.shader.SetInts("bottomInts", DoubleAsInts(Bottom));
 
-            TileManager.inst.shader.Dispatch(TileManager.inst.doubleKernel, TileManager.inst.textureSize / 4, TileManager.inst.textureSize / 4, 1);
+            Manager.shader.Dispatch(Manager.doubleKernel, Manager.textureSize / 4, Manager.textureSize / 4, 1);
         }
 
-        plane = (GameObject)Instantiate(TileManager.inst.tilePrefab);
-        UpdatePosition();
+        gameObject.GetComponent<MeshRenderer>().material.SetTexture("_MainTex", texture);
+        
+        Update();
 
-        plane.GetComponent<MeshRenderer>().material.SetTexture("_MainTex", texture);
+
     }
 
 
 
-    public void UpdatePosition()
+    public void Update()
     {
-        // By scaling the tiles and zooming the camera each at sqrt(zoom),
-        // we square the maximum zoom using floats
-        //double camZoom = Math.Sqrt(CameraControl.zoom);
         double camZoom = CameraControl.zoom;
         double camX = CameraControl.centerX;
         double camY = CameraControl.centerY;
 
         float scale = (float)(2 * camZoom / Zoom);
-        plane.transform.position = new Vector3(
+        gameObject.transform.position = new Vector3(
             (float)((centerX - camX) * camZoom),
             (float)((centerY - camY) * camZoom),
             level / 10.0f);
-        plane.transform.localScale = new Vector3(scale, scale, scale);
+        gameObject.transform.localScale = new Vector3(scale, scale, level / 10.0f);
 
-        //GetComponent<>
+        TextMesh text = gameObject.GetComponentInChildren<TextMesh>();
+        if (text != null)
+        {
+            text.text = HexAddress;
+            text.fontSize = (int)(10000 / Math.Pow(HexAddress.Length, 1));
+
+        }
     }
 
     private static int[] DoubleAsInts(double value)
@@ -127,22 +125,33 @@ public class Tile : MonoBehaviour
             default:
                 throw new Exception("Y should be 0 or 1");
         }
-        return new Tile(level + 1, cx, cy);
+
+        int addressNext = x + 2 * y;
+
+        var result = Instantiate<GameObject>(gameObject);
+        result.GetComponent<Tile>().Init(Manager, level + 1, address + addressNext, cx, cy);
+        return result.GetComponent<Tile>();
     }
 
     public void RenderDeeper()
     {
-        RenderTexture tex = plane.GetComponent<MeshRenderer>().material.GetTexture("_MainTex") as RenderTexture;
+        RenderTexture tex = gameObject.GetComponent<MeshRenderer>().material.GetTexture("_MainTex") as RenderTexture;
 
         if (tex == null)
             throw new Exception("Could not cast the texture as a RenderTexture!");
 
-        TileManager.inst.shader.SetInt("textureSize", TileManager.inst.textureSize);
+        Manager.shader.SetInt("textureSize", Manager.textureSize);
     }
 
     internal void Destroy()
     {
-        GameObject.Destroy(plane, 0);
+        if (gameObject != null)
+        {
+            var text = gameObject.GetComponentInChildren<TextMesh>();
+            if (text != null)
+                text.color = new Color(0, 0, 0, 0);
+        }
+        GameObject.Destroy(gameObject, 0);
     }
 
     public Boolean IsInView()
@@ -153,5 +162,28 @@ public class Tile : MonoBehaviour
             (camRect.yMin <= Bottom) &&
             (camRect.yMax >= Top);
     }
-    */
+
+    public string HexAddress
+    {
+        get
+        {
+            string result = "0x";
+            for (int i = 0; i < address.Length; i++)
+            {
+                if (i % 2 == 0)
+                {
+                    result += address[i];
+                }
+                else
+                {
+                    int number = Int32.Parse("" + address[i - 1]) * 4;
+                    number += Int32.Parse("" + address[i]);
+                    result = result.Substring(0, result.Length - 1);
+                    result += number.ToString("X");
+                }
+            }
+
+            return result;
+        }
+    }
 }
