@@ -28,7 +28,6 @@ public class TileManager : MonoBehaviour {
     }
 	
 	void Update () {
-        //Rect cameraRect = CameraControl.CameraRect;
         double camZoom = CameraControl.zoom;
 
 	    foreach (Tile t in tiles)
@@ -44,10 +43,6 @@ public class TileManager : MonoBehaviour {
             {
                 t.splittable = false;
                 RenderManager.SplitQueue.Add(t);
-                //tiles.AddRange(t.buildChildren());
-                //t.Destroy();
-                //tiles.Remove(t);
-                //break;
             }
 
             else if (CutoffManager.cutoff > t.iterations + 100 &&
@@ -169,26 +164,13 @@ public class TileManager : MonoBehaviour {
             UpdatePosition();
 
             plane.GetComponent<MeshRenderer>().material.SetTexture("_MainTex", texture);
-
-            //text = plane.GetComponent<GUIText>();
-            //text.text = level.ToString();
-            TextMesh text = plane.GetComponentInChildren<TextMesh>();
-            if (text != null)
-            {
-
-                text.text = address;
-                //text.fontSize /= level;
-
-            }
+            
         }
 
 
 
         public void UpdatePosition()
         {
-            // By scaling the tiles and zooming the camera each at sqrt(zoom),
-            // we square the maximum zoom using floats
-            //double camZoom = Math.Sqrt(CameraControl.zoom);
             double camZoom = CameraControl.zoom;
             double camX = CameraControl.centerX;
             double camY = CameraControl.centerY;
@@ -199,19 +181,12 @@ public class TileManager : MonoBehaviour {
                 (float)((centerY - camY) * camZoom),
                 level / 10.0f);
             plane.transform.localScale = new Vector3(scale, scale, level / 10.0f);
-
-            //text.transform.position = plane.transform.localScale;
+            
             TextMesh text = plane.GetComponentInChildren<TextMesh>();
             if (text != null)
             {
-
-
-                //    text.fontSize = (int)(96 * scale);
-                //text.text = address;
                 text.text = HexAddress;
-                if (level > 0)
-                    text.fontSize = (int)(400 / Math.Pow(HexAddress.Length, 0.7));
-            //    //text.transform.position = Vector3.Scale(plane.transform.position, new Vector3(scale, scale, scale));
+                text.fontSize = (int)(400 / Math.Pow(HexAddress.Length, 0.7));
 
         }
     }
@@ -283,15 +258,6 @@ public class TileManager : MonoBehaviour {
                 if (text != null)
                     text.color = new Color(0, 0, 0, 0);
             }
-            //GameObject.Destroy()
-            //foreach (object obj in plane.transform)
-            //{
-            //    var t = (obj as Transform);
-            //    if (t != null)
-            //        GameObject.Destroy(t.gameObject);
-            //    //if (child != null)
-            //    //    GameObject.Destroy(child);
-            //}
             GameObject.Destroy(plane, 0);
         }
 
